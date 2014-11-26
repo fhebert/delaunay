@@ -23,7 +23,7 @@ namespace {
     // TODO: implement real method that tries a triangle and then moves towards
     //       the known p for the next guess...
     for (size_t i=0; i<tris.size(); ++i) {
-      if (pointInTriangle(p, tris[i]))
+      if (tris[i].isPointEnclosed(p))
         return i;
     }
     assert(false and "should have found the enclosing triangle");
@@ -35,17 +35,18 @@ namespace {
     // start by identifying the triangle that contains point
     const int index = enclosingTriangle(p, tris);
 
+    // TODO: special cases when new point is on internal or external edge
+
     // add new sub-triangles
-    tris.push_back({tris[index].a_, tris[index].b_, p});
-    tris.push_back({tris[index].b_, tris[index].c_, p});
-    tris.push_back({tris[index].c_, tris[index].a_, p});
+    const int size = tris.size();
+    tris.push_back({size, tris[index].vertex(0), tris[index].vertex(1), p, size+1, size+2, tris[index].neighbor(2)});
+    tris.push_back({size+1, tris[index].vertex(1), tris[index].vertex(2), p, size+2, size, tris[index].neighbor(0)});
+    tris.push_back({size+2, tris[index].vertex(2), tris[index].vertex(0), p, size, size+1, tris[index].neighbor(1)});
 
     // erase the parent triangle from the list
     // TODO: avoid this inneficient array deletion
     // TODO: deal with triangle neighbors
-    std::cout << "erasing triangle at index " << index << "\n"
-      << ToString(tris[index]) << "\n";
-    tris.erase(tris.begin()+index);
+    //tris.erase(tris.begin()+index);
 
     // TODO: flip triangles for delaunay condition
   }
@@ -77,10 +78,10 @@ class DelaunayTri {
 
       // triangulate this small list
       // TODO: triangles need to know about their neighbors
-      triangles_.push_back({points_[0], points_[1], points_[4]});
-      triangles_.push_back({points_[1], points_[2], points_[4]});
-      triangles_.push_back({points_[2], points_[3], points_[4]});
-      triangles_.push_back({points_[3], points_[0], points_[4]});
+      triangles_.push_back({0, points_[0], points_[1], points_[4], 1, 3, -1});
+      triangles_.push_back({1, points_[1], points_[2], points_[4], 2, 0, -1});
+      triangles_.push_back({2, points_[2], points_[3], points_[4], 3, 1, -1});
+      triangles_.push_back({3, points_[3], points_[0], points_[4], 0, 2, -1});
     }
 
 
@@ -113,7 +114,7 @@ class DelaunayTri {
     {
       std::ofstream outfile(filename);
       for (auto tri : triangles_) {
-        outfile << ToString(tri) << "\n";
+        outfile << tri.toString() << "\n";
       }
       outfile.close();
     }

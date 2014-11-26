@@ -6,37 +6,61 @@
 #include "Point.h"
 #include "VectorOps.h"
 
+#include <cassert>
 #include <string>
 
 
-struct Triangle {
+class Triangle {
 
-  Triangle(const Point& a, const Point& b, const Point& c)
-    : a_(a), b_(b), c_(c) {}
+  public:
+    Triangle(const int index, const Point& a, const Point& b, const Point& c,
+        const int na, const int nb, const int nc)
+      : index_(index), vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}) {}
 
-  // TODO: make const, but this breaks copy c'tors used in the process of
-  // deleting triangles from the std::vector (which i want to remove anyway)
-  Point a_, b_, c_;
+
+    int neighbor(const int i) const {
+      assert(i==0 or i==1 or i==2);
+      return neighbors_[i];
+    }
+
+    Point vertex(const int i) const {
+      assert(i==0 or i==1 or i==2);
+      return vertices_[i];
+    }
+
+    void updateNeighbor(const int oldnbr, const int newnbr) {
+      assert(oldnbr==neighbors_[0] or oldnbr==neighbors_[1] or oldnbr==neighbors_[2]);
+      if (oldnbr == neighbors_[0]) {
+        neighbors_[0] = newnbr;
+      } else if (oldnbr == neighbors_[1]) {
+        neighbors_[1] = newnbr;
+      } else {
+        neighbors_[2] = newnbr;
+      }
+    }
+
+    bool isPointEnclosed(const Point& p) const {
+      return (sameSide(p,vertices_[0], vertices_[1],vertices_[2])
+          and sameSide(p,vertices_[1], vertices_[0],vertices_[2])
+          and sameSide(p,vertices_[2], vertices_[0],vertices_[1]))
+        ? true : false;
+    }
+
+    std::string toString() const {
+      using std::to_string;
+      return to_string(vertices_[0][0]) + "  " + to_string(vertices_[0][1])
+        + "\n" + to_string(vertices_[1][0]) + "  " + to_string(vertices_[1][1])
+        + "\n" + to_string(vertices_[2][0]) + "  " + to_string(vertices_[2][1])
+        + "\n" + to_string(vertices_[0][0]) + "  " + to_string(vertices_[0][1])
+        + "\n";
+    }
+
+
+  private:
+    const int index_;
+    const std::array<Point, 3> vertices_;
+    std::array<int, 3> neighbors_; // i'th neighbor is across from i'th vertex
 };
-
-
-bool pointInTriangle(const Point& p, const Triangle& t)
-{
-  return (sameSide(p,t.a_, t.b_,t.c_)
-      and sameSide(p,t.b_, t.a_,t.c_)
-      and sameSide(p,t.c_, t.a_,t.b_)) ? true : false;
-}
-
-
-std::string ToString(const Triangle& tri)
-{
-  using std::to_string;
-  return to_string(tri.a_[0]) + "  " + to_string(tri.a_[1])
-    + "\n" + to_string(tri.b_[0]) + "  " + to_string(tri.b_[1])
-    + "\n" + to_string(tri.c_[0]) + "  " + to_string(tri.c_[1])
-    + "\n" + to_string(tri.a_[0]) + "  " + to_string(tri.a_[1]) + "\n";
-}
-
 
 
 #endif // INTERP_TRIANGLE_H
