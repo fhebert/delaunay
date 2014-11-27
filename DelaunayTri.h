@@ -23,33 +23,13 @@ namespace {
     // TODO: implement real method that tries a triangle and then moves towards
     //       the known p for the next guess...
     for (size_t i=0; i<tris.size(); ++i) {
-      if (tris[i].isPointEnclosed(p))
+      if (tris[i].isPointInside(p))
         return i;
     }
     assert(false and "should have found the enclosing triangle");
     return 0;
   }
 
-  void insertPoint(const Point& p, std::vector<Triangle>& tris)
-  {
-    // start by identifying the triangle that contains point
-    const int index = enclosingTriangle(p, tris);
-
-    // TODO: special cases when new point is on internal or external edge
-
-    // add new sub-triangles
-    const int size = tris.size();
-    tris.push_back({size, tris[index].vertex(0), tris[index].vertex(1), p, size+1, size+2, tris[index].neighbor(2)});
-    tris.push_back({size+1, tris[index].vertex(1), tris[index].vertex(2), p, size+2, size, tris[index].neighbor(0)});
-    tris.push_back({size+2, tris[index].vertex(2), tris[index].vertex(0), p, size, size+1, tris[index].neighbor(1)});
-
-    // erase the parent triangle from the list
-    // TODO: avoid this inneficient array deletion
-    // TODO: deal with triangle neighbors
-    //tris.erase(tris.begin()+index);
-
-    // TODO: flip triangles for delaunay condition
-  }
 
 }
 
@@ -77,11 +57,10 @@ class DelaunayTri {
       points_.push_back({{(xmin_+xmax_)/2.0, (ymin_+ymax)/2.0}});
 
       // triangulate this small list
-      // TODO: triangles need to know about their neighbors
-      triangles_.push_back({0, points_[0], points_[1], points_[4], 1, 3, -1});
-      triangles_.push_back({1, points_[1], points_[2], points_[4], 2, 0, -1});
-      triangles_.push_back({2, points_[2], points_[3], points_[4], 3, 1, -1});
-      triangles_.push_back({3, points_[3], points_[0], points_[4], 0, 2, -1});
+      triangles_.push_back({points_, 0, 1, 4, 1, 3, -1});
+      triangles_.push_back({points_, 1, 2, 4, 2, 0, -1});
+      triangles_.push_back({points_, 2, 3, 4, 3, 1, -1});
+      triangles_.push_back({points_, 3, 0, 4, 0, 2, -1});
     }
 
 
@@ -104,7 +83,7 @@ class DelaunayTri {
 
       // iteratively add each point
       for (auto newpoint : MorePoints) {
-        insertPoint(newpoint, triangles_);
+        insertPoint(newpoint);
       }
       return true;
     }
@@ -118,6 +97,35 @@ class DelaunayTri {
       }
       outfile.close();
     }
+
+
+  private:
+    void insertPoint(const Point& p)
+    {
+      // add point to list
+      const int newPoint = points_.size();
+      points_.push_back(p);
+
+      // start by identifying the triangle that contains point
+      const int index = enclosingTriangle(p, triangles_);
+      const Triangle& tri = triangles_[index];
+
+      // TODO: special cases when new point is on internal or external edge
+
+      // add new sub-triangles
+      const int size = triangles_.size();
+      triangles_.push_back({points_, tri.vertex(0), tri.vertex(1), newPoint, size+1, size+2, tri.neighbor(2)});
+      triangles_.push_back({points_, tri.vertex(1), tri.vertex(2), newPoint, size+2, size, tri.neighbor(0)});
+      triangles_.push_back({points_, tri.vertex(2), tri.vertex(0), newPoint, size, size+1, tri.neighbor(1)});
+
+      // erase the parent triangle from the list
+      // TODO: avoid this inneficient array deletion
+      // TODO: deal with triangle neighbors
+      //tris.erase(tris.begin()+index);
+
+      // TODO: flip triangles for delaunay condition
+    }
+
 
   private:
     std::vector<Point> points_;

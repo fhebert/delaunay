@@ -36,7 +36,7 @@ bool sameSide(const Point& p1, const Point& p2, const Point& a, const Point& b)
   const double c1 = ab[0]*a1[1] - ab[1]*a1[0];
   const double c2 = ab[0]*a2[1] - ab[1]*a2[0];
 
-  return (c1*c2 >= 0) ? true : false;
+  return (c1*c2 >= 0);
 }
 
 
