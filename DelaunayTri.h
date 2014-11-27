@@ -1,6 +1,6 @@
 
-#ifndef INTERP_DELAUNAYTRI_H
-#define INTERP_DELAUNAYTRI_H
+#ifndef DELAUNAY_DELAUNAYTRI_H
+#define DELAUNAY_DELAUNAYTRI_H
 
 
 #include "Point.h"
@@ -134,4 +134,4 @@ class DelaunayTri {
     const double ymin_, ymax_;
 };
 
-#endif // INTERP_DELAUNAYTRI_H
+#endif // DELAUNAY_DELAUNAYTRI_H

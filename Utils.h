@@ -1,6 +1,6 @@
 
-#ifndef INTERP_UTILS_H
-#define INTERP_UTILS_H
+#ifndef DELAUNAY_UTILS_H
+#define DELAUNAY_UTILS_H
 
 
 #include <algorithm>
@@ -12,4 +12,4 @@ bool contains(const container& c, const element& e)
 }
 
 
-#endif // INTERP_UTILS_H
+#endif // DELAUNAY_UTILS_H

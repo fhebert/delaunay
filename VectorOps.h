@@ -1,6 +1,6 @@
 
-#ifndef INTERP_VECTOR_OPS_H
-#define INTERP_VECTOR_OPS_H
+#ifndef DELAUNAY_VECTOR_OPS_H
+#define DELAUNAY_VECTOR_OPS_H
 
 
 #include <cmath>
@@ -40,4 +40,4 @@ bool sameSide(const Point& p1, const Point& p2, const Point& a, const Point& b)
 }
 
 
-#endif // INTERP_VECTOR_OPS_H
+#endif // DELAUNAY_VECTOR_OPS_H

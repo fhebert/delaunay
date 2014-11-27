@@ -1,6 +1,6 @@
 
-#ifndef INTERP_TRIANGLE_H
-#define INTERP_TRIANGLE_H
+#ifndef DELAUNAY_TRIANGLE_H
+#define DELAUNAY_TRIANGLE_H
 
 
 #include "Point.h"
@@ -69,4 +69,4 @@ class Triangle {
 };
 
 
-#endif // INTERP_TRIANGLE_H
+#endif // DELAUNAY_TRIANGLE_H
