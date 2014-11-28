@@ -3,7 +3,6 @@
 #define DELAUNAY_DELAUNAYTRI_H
 
 
-#include "Connectivity.h"
 #include "Point.h"
 #include "Triangle.h"
 #include "VectorOps.h"
@@ -34,10 +33,10 @@ class DelaunayTri {
       points_.push_back({{(xmin_+xmax_)/2.0, (ymin_+ymax)/2.0}});
 
       // explicitly connect triangles in this small list
-      connections_.emplace_back(0, 1, 4, 1, 3, -1);
-      connections_.emplace_back(1, 2, 4, 2, 0, -1);
-      connections_.emplace_back(2, 3, 4, 3, 1, -1);
-      connections_.emplace_back(3, 0, 4, 0, 2, -1);
+      triangles_.emplace_back(points_, 0, 1, 4, 1, 3, -1);
+      triangles_.emplace_back(points_, 1, 2, 4, 2, 0, -1);
+      triangles_.emplace_back(points_, 2, 3, 4, 3, 1, -1);
+      triangles_.emplace_back(points_, 3, 0, 4, 0, 2, -1);
     }
 
 
@@ -69,8 +68,7 @@ class DelaunayTri {
     void WriteToFile(const std::string& filename) const
     {
       std::ofstream outfile(filename);
-      for (const auto& c : connections_) {
-        const Triangle tri(c, points_);
+      for (const auto& tri : triangles_) {
         outfile << tri.toString() << "\n";
       }
       outfile.close();
@@ -87,7 +85,7 @@ class DelaunayTri {
 
       // find and split the enclosing triangle
       const int index = findEnclosingTriangleIndex(p);
-      splitTriangleAndReconnect(index, newVertex);
+      splitTriangle(index, newVertex);
 
       // TODO: flip triangles for delaunay condition
     }
@@ -98,9 +96,8 @@ class DelaunayTri {
       // for now, brute-force by trying all leaf triangles
       // TODO: implement real method that tries a triangle and then moves towards
       //       the known p for the next guess...
-      for (size_t i=0; i<connections_.size(); ++i) {
-        const Triangle tri(connections_[i], points_);
-        if (tri.isPointInside(p))
+      for (size_t i=0; i<triangles_.size(); ++i) {
+        if (triangles_[i].isPointInside(p))
           return i;
       }
       assert(false and "should have found the enclosing triangle");
@@ -108,41 +105,42 @@ class DelaunayTri {
     }
 
 
-    // the split will generate new triangles. we store one by overwriting the
-    // original triangles, and append the others at the end of the list
-    void splitTriangleAndReconnect(const int index, const int newVertex)
+    void splitTriangle(const int index, const int newVertex)
     {
-      // make a COPY not a reference because original triangle is destroyed in this function
-      const Connectivity connection(connections_[index]);
-
       // shortcuts for sanity
-      const int v0 = connection.vertex(0);
-      const int v1 = connection.vertex(1);
-      const int v2 = connection.vertex(2);
-      const int n0 = connection.neighbor(0);
-      const int n1 = connection.neighbor(1);
-      const int n2 = connection.neighbor(2);
+      const int v0 = triangles_[index].vertex(0);
+      const int v1 = triangles_[index].vertex(1);
+      const int v2 = triangles_[index].vertex(2);
+      const int n0 = triangles_[index].neighbor(0);
+      const int n1 = triangles_[index].neighbor(1);
+      const int n2 = triangles_[index].neighbor(2);
 
       // TODO: special cases when new point is on internal or external edge
 
       // add new sub-triangles
-      const int subTriIndex1 = connections_.size();
-      const int subTriIndex2 = subTriIndex1 + 1;
-      connections_[index] = {v0, v1, newVertex, subTriIndex1, subTriIndex2, n2};
-      connections_.emplace_back(v1, v2, newVertex, subTriIndex2, index, n0);
-      connections_.emplace_back(v2, v0, newVertex, index, subTriIndex1, n1);
+      // i'th sub triangle is adjacent to i'th neighbor, opposite from i'th vertex
+      // TODO: check indices
+      const int subTri0 = triangles_.size();
+      const int subTri1 = subTri0 + 1;
+      const int subTri2 = subTri0 + 2;
+      triangles_.emplace_back(points_, v1, v2, newVertex, subTri1, subTri2, n0);
+      triangles_.emplace_back(points_, v2, v0, newVertex, subTri2, subTri0, n1);
+      triangles_.emplace_back(points_, v0, v1, newVertex, subTri0, subTri1, n2);
 
       // fix pre-existing neighbor triangles to point to new triangles
-      connections_[n0].updateNeighbor(index, subTriIndex1);
-      connections_[n1].updateNeighbor(index, subTriIndex2);
-      // neighbor(2) still points to same index by 'replacement construction'
+      triangles_[n0].updateNeighbor(index, subTri0);
+      triangles_[n1].updateNeighbor(index, subTri1);
+      triangles_[n2].updateNeighbor(index, subTri2);
+
+      // point triangle to children
+      triangles_[index].setSubTriangles({subTri0, subTri1, subTri2});
     }
 
 
 
   private:
     std::vector<Point> points_;
-    std::vector<Connectivity> connections_;
+    std::vector<Triangle> triangles_;
     const double xmin_, xmax_;
     const double ymin_, ymax_;
 };

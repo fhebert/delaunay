@@ -3,11 +3,12 @@
 #define DELAUNAY_TRIANGLE_H
 
 
-#include "Connectivity.h"
 #include "Point.h"
 #include "VectorOps.h"
 #include "Utils.h"
 
+#include <array>
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -15,16 +16,38 @@
 class Triangle {
 
   public:
-    Triangle(const Connectivity& conn, const std::vector<Point>& points)
-      : conn_(conn), v0_(points[conn.vertex(0)]), v1_(points[conn.vertex(1)]), v2_(points[conn.vertex(2)]) {}
+    Triangle(const std::vector<Point>& points,
+        const int a, const int b, const int c, const int na, const int nb, const int nc)
+      : isLeaf_(true),
+      v0_(points[a]), v1_(points[b]), v2_(points[c]),
+      vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}) {}
 
 
     int vertex(const int i) const {
-      return conn_.vertex(i);
+      assert(i==0 or i==1 or i==2);
+      return vertices_[i];
     }
 
     int neighbor(const int i) const {
-      return conn_.neighbor(i);
+      assert(i==0 or i==1 or i==2);
+      return neighbors_[i];
+    }
+
+    void setSubTriangles(const std::vector<int>& subTris) {
+      subTriangles_ = subTris;
+    }
+
+    bool isLeaf() const {return subTriangles_.size() > 0;}
+
+    void updateNeighbor(const int oldnbr, const int newnbr) {
+      assert(contains(neighbors_, oldnbr));
+      if (oldnbr == neighbors_[0]) {
+        neighbors_[0] = newnbr;
+      } else if (oldnbr == neighbors_[1]) {
+        neighbors_[1] = newnbr;
+      } else {
+        neighbors_[2] = newnbr;
+      }
     }
 
     bool isPointInside(const Point& p) const {
@@ -40,11 +63,17 @@ class Triangle {
         + "\n";
     }
 
+
   private:
-    const Connectivity& conn_;
+    // triangle defined by 3 vertices, has 3 neighbors
+    // i'th neighbor is opposite from i'th vertex
+    bool isLeaf_;
     const Point& v0_;
     const Point& v1_;
     const Point& v2_;
+    const std::array<int, 3> vertices_;
+    std::array<int, 3> neighbors_;
+    std::vector<int> subTriangles_;
 };
 
 
