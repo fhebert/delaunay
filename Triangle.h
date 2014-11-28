@@ -3,11 +3,11 @@
 #define DELAUNAY_TRIANGLE_H
 
 
+#include "Connectivity.h"
 #include "Point.h"
 #include "VectorOps.h"
 #include "Utils.h"
 
-#include <cassert>
 #include <string>
 #include <vector>
 
@@ -15,57 +15,36 @@
 class Triangle {
 
   public:
-    Triangle(const std::vector<Point>& points,
-        const int a, const int b, const int c, const int na, const int nb, const int nc)
-      : points_(points), vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}) {}
+    Triangle(const Connectivity& conn, const std::vector<Point>& points)
+      : conn_(conn), v0_(points[conn.vertex(0)]), v1_(points[conn.vertex(1)]), v2_(points[conn.vertex(2)]) {}
 
-
-    int neighbor(const int i) const {
-      assert(i==0 or i==1 or i==2);
-      return neighbors_[i];
-    }
 
     int vertex(const int i) const {
-      assert(i==0 or i==1 or i==2);
-      return vertices_[i];
+      return conn_.vertex(i);
     }
 
-    void updateNeighbor(const int oldnbr, const int newnbr) {
-      assert(contains(neighbors_, oldnbr));
-      if (oldnbr == neighbors_[0]) {
-        neighbors_[0] = newnbr;
-      } else if (oldnbr == neighbors_[1]) {
-        neighbors_[1] = newnbr;
-      } else {
-        neighbors_[2] = newnbr;
-      }
+    int neighbor(const int i) const {
+      return conn_.neighbor(i);
     }
 
     bool isPointInside(const Point& p) const {
-      const Point& v0 = points_[vertices_[0]];
-      const Point& v1 = points_[vertices_[1]];
-      const Point& v2 = points_[vertices_[2]];
-      return (sameSide(p,v0, v1,v2) and sameSide(p,v1, v0,v2) and sameSide(p,v2, v0,v1));
+      return (sameSide(p,v0_, v1_,v2_) and sameSide(p,v1_, v0_,v2_) and sameSide(p,v2_, v0_,v1_));
     }
 
     std::string toString() const {
-      const Point& v0 = points_[vertices_[0]];
-      const Point& v1 = points_[vertices_[1]];
-      const Point& v2 = points_[vertices_[2]];
       using std::to_string;
-      return to_string(v0[0]) + "  " + to_string(v0[1])
-        + "\n" + to_string(v1[0]) + "  " + to_string(v1[1])
-        + "\n" + to_string(v2[0]) + "  " + to_string(v2[1])
-        + "\n" + to_string(v0[0]) + "  " + to_string(v0[1])
+      return to_string(v0_[0]) + "  " + to_string(v0_[1])
+        + "\n" + to_string(v1_[0]) + "  " + to_string(v1_[1])
+        + "\n" + to_string(v2_[0]) + "  " + to_string(v2_[1])
+        + "\n" + to_string(v0_[0]) + "  " + to_string(v0_[1])
         + "\n";
     }
 
   private:
-    // triangle defined by 3 vertices, has 3 neighbors
-    // i'th neighbor is opposite from i'th vertex
-    const std::vector<Point>& points_;
-    const std::array<int, 3> vertices_;
-    std::array<int, 3> neighbors_;
+    const Connectivity& conn_;
+    const Point& v0_;
+    const Point& v1_;
+    const Point& v2_;
 };
 
 
