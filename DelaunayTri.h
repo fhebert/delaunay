@@ -84,32 +84,14 @@ class DelaunayTri {
       const int newVertex = points_.size();
       points_.push_back(p);
 
-      // start by finding the indices of the new triangles
-      // the split will generate new triangles. we store one by overwriting the
-      // original triangles, and append the others at the end of the list
-      const int triIndex0 = findEnclosingTriangleIndex(p);
-      const int triIndex1 = connections_.size();
-
-      // make a COPY not a reference because original triangle is destroyed in this function
-      const Connectivity c(connections_[triIndex0]);
-
-      // TODO: special cases when new point is on internal or external edge
-
-      // add new sub-triangles
-      const int triIndex2 = triIndex1 + 1;
-      connections_[triIndex0] = {c.vertex(0), c.vertex(1), newVertex, triIndex1, triIndex2, c.neighbor(2)};
-      connections_.emplace_back(c.vertex(1), c.vertex(2), newVertex, triIndex2, triIndex0, c.neighbor(0));
-      connections_.emplace_back(c.vertex(2), c.vertex(0), newVertex, triIndex0, triIndex1, c.neighbor(1));
-
-      // fix pre-existing neighbor triangles to point to new triangles
-      connections_[c.neighbor(0)].updateNeighbor(triIndex0, triIndex1);
-      connections_[c.neighbor(1)].updateNeighbor(triIndex0, triIndex2);
-      // neighbor(2) still points to same index by 'replacement construction'
+      // find and split the enclosing triangle
+      const int index = findEnclosingTriangleIndex(p);
+      splitTriangleAndReconnect(index, newVertex);
 
       // TODO: flip triangles for delaunay condition
     }
 
-    size_t findEnclosingTriangleIndex(const Point& p)
+    size_t findEnclosingTriangleIndex(const Point& p) const
     {
       // for now, brute-force by trying all leaf triangles
       // TODO: implement real method that tries a triangle and then moves towards
@@ -121,6 +103,37 @@ class DelaunayTri {
       }
       assert(false and "should have found the enclosing triangle");
       return 0;
+    }
+
+    // the split will generate new triangles. we store one by overwriting the
+    // original triangles, and append the others at the end of the list
+    void splitTriangleAndReconnect(const int index, const int newVertex)
+    {
+      // make a COPY not a reference because original triangle is destroyed in this function
+      const Connectivity connection(connections_[index]);
+
+      // shortcuts for sanity
+      const int v0 = connection.vertex(0);
+      const int v1 = connection.vertex(1);
+      const int v2 = connection.vertex(2);
+      const int n0 = connection.neighbor(0);
+      const int n1 = connection.neighbor(1);
+      const int n2 = connection.neighbor(2);
+
+      // TODO: special cases when new point is on internal or external edge
+
+      // add new sub-triangles
+      const int subTriIndex1 = connections_.size();
+      const int subTriIndex2 = subTriIndex1 + 1;
+      connections_[index] = {v0, v1, newVertex, subTriIndex1, subTriIndex2, n2};
+      connections_.emplace_back(v1, v2, newVertex, subTriIndex2, index, n0);
+      connections_.emplace_back(v2, v0, newVertex, index, subTriIndex1, n1);
+
+      // fix pre-existing neighbor triangles to point to new triangles
+      connections_[n0].updateNeighbor(index, subTriIndex1);
+      connections_[n1].updateNeighbor(index, subTriIndex2);
+      // neighbor(2) still points to same index by 'replacement construction'
+
     }
 
 
