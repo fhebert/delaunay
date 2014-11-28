@@ -77,6 +77,7 @@ class DelaunayTri {
     }
 
 
+
   private:
     void insertPointAndRetriangulate(const Point& p)
     {
@@ -91,6 +92,7 @@ class DelaunayTri {
       // TODO: flip triangles for delaunay condition
     }
 
+
     size_t findEnclosingTriangleIndex(const Point& p) const
     {
       // for now, brute-force by trying all leaf triangles
@@ -104,6 +106,7 @@ class DelaunayTri {
       assert(false and "should have found the enclosing triangle");
       return 0;
     }
+
 
     // the split will generate new triangles. we store one by overwriting the
     // original triangles, and append the others at the end of the list
@@ -133,8 +136,8 @@ class DelaunayTri {
       connections_[n0].updateNeighbor(index, subTriIndex1);
       connections_[n1].updateNeighbor(index, subTriIndex2);
       // neighbor(2) still points to same index by 'replacement construction'
-
     }
+
 
 
   private:
