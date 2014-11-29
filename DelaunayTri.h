@@ -93,15 +93,24 @@ class DelaunayTri {
 
     size_t findEnclosingTriangleIndex(const Point& p) const
     {
-      // for now, brute-force by trying all leaf triangles
-      // TODO: implement real method that tries a triangle and then moves towards
-      //       the known p for the next guess...
-      for (size_t i=0; i<triangles_.size(); ++i) {
-        if (triangles_[i].isPointInside(p))
-          return i;
+      int tri = -1;
+      for (size_t i=0; i<4; ++i) {
+        if (triangles_[i].isPointInside(p)) {
+          tri = i;
+          break;
+        }
       }
-      assert(false and "should have found the enclosing triangle");
-      return 0;
+
+      while (not triangles_[tri].isLeaf()) {
+        for (const auto& sub : triangles_[tri].subTriangles()) {
+          if (triangles_[sub].isPointInside(p)) {
+            tri = sub;
+            continue;
+          }
+          assert(false and "triangle wasn't a leaf but children did not contain point");
+        }
+      }
+      return tri;
     }
 
 
@@ -128,9 +137,15 @@ class DelaunayTri {
       triangles_.emplace_back(points_, v0, v1, newVertex, subTri0, subTri1, n2);
 
       // fix pre-existing neighbor triangles to point to new triangles
-      triangles_[n0].updateNeighbor(index, subTri0);
-      triangles_[n1].updateNeighbor(index, subTri1);
-      triangles_[n2].updateNeighbor(index, subTri2);
+      if (n0 >= 0) {
+        triangles_[n0].updateNeighbor(index, subTri0);
+      }
+      if (n1 >= 0) {
+        triangles_[n1].updateNeighbor(index, subTri1);
+      }
+      if (n2 >= 0) {
+        triangles_[n2].updateNeighbor(index, subTri2);
+      }
 
       // point triangle to children
       triangles_[index].setSubTriangles({subTri0, subTri1, subTri2});

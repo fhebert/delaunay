@@ -37,7 +37,9 @@ class Triangle {
       subTriangles_ = subTris;
     }
 
-    bool isLeaf() const {return subTriangles_.size() > 0;}
+    std::vector<int> subTriangles() const { return subTriangles_; }
+
+    bool isLeaf() const { return subTriangles_.size() == 0; }
 
     void updateNeighbor(const int oldnbr, const int newnbr) {
       assert(contains(neighbors_, oldnbr));
