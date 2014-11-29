@@ -128,7 +128,6 @@ class DelaunayTri {
 
       // add new sub-triangles
       // i'th sub triangle is adjacent to i'th neighbor, opposite from i'th vertex
-      // TODO: check indices
       const int subTri0 = triangles_.size();
       const int subTri1 = subTri0 + 1;
       const int subTri2 = subTri0 + 2;
