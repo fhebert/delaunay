@@ -105,9 +105,8 @@ class DelaunayTri {
         for (const auto& sub : triangles_[tri].subTriangles()) {
           if (triangles_[sub].isPointInside(p)) {
             tri = sub;
-            continue;
+            break;
           }
-          assert(false and "triangle wasn't a leaf but children did not contain point");
         }
       }
       return tri;
