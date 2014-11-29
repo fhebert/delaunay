@@ -22,5 +22,5 @@ int main() {
   bool status = delaunay.addPoints(points);
   assert(status and "couldn't add points?");
 
-  delaunay.WriteToFile("triangulation.data");
+  delaunay.writeToFile("triangulation.data");
 }

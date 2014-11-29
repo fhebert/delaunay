@@ -60,16 +60,18 @@ class DelaunayTri {
       // iteratively add each point
       for (const auto& newpoint : MorePoints) {
         insertPointAndRetriangulate(newpoint);
+        writeToFile("temp.out");
       }
       return true;
     }
 
 
-    void WriteToFile(const std::string& filename) const
+    void writeToFile(const std::string& filename) const
     {
       std::ofstream outfile(filename);
       for (const auto& tri : triangles_) {
-        outfile << tri.toString() << "\n";
+        if (tri.isLeaf())
+          outfile << tri.toString() << "\n";
       }
       outfile.close();
     }
