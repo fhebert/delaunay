@@ -20,7 +20,7 @@ class Triangle {
         const int a, const int b, const int c, const int na, const int nb, const int nc)
       : isLeaf_(true),
       v0_(points[a]), v1_(points[b]), v2_(points[c]),
-      vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}) {}
+      vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}), children_({{-1,-1,-1}}) {}
 
 
     int vertex(const int i) const {
@@ -33,13 +33,15 @@ class Triangle {
       return neighbors_[i];
     }
 
-    void setSubTriangles(const std::vector<int>& subTris) {
-      subTriangles_ = subTris;
+    void setChildren(const int ca, const int cb, const int cc=-1) {
+      children_[0] = ca;
+      children_[1] = cb;
+      children_[2] = cc;
     }
 
-    std::vector<int> subTriangles() const { return subTriangles_; }
+    std::array<int, 3> children() const { return children_; }
 
-    bool isLeaf() const { return subTriangles_.size() == 0; }
+    bool isLeaf() const { return children_[0] == -1; }
 
     void updateNeighbor(const int oldnbr, const int newnbr) {
       assert(contains(neighbors_, oldnbr));
@@ -75,7 +77,7 @@ class Triangle {
     const Point& v2_;
     const std::array<int, 3> vertices_;
     std::array<int, 3> neighbors_;
-    std::vector<int> subTriangles_;
+    std::array<int, 3> children_;
 };
 
 

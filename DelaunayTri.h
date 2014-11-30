@@ -104,9 +104,9 @@ class DelaunayTri {
       }
 
       while (not triangles_[tri].isLeaf()) {
-        for (const auto& sub : triangles_[tri].subTriangles()) {
-          if (triangles_[sub].isPointInside(p)) {
-            tri = sub;
+        for (const auto& child : triangles_[tri].children()) {
+          if (triangles_[child].isPointInside(p)) {
+            tri = child;
             break;
           }
         }
@@ -128,27 +128,27 @@ class DelaunayTri {
       // TODO: special cases when new point is on internal or external edge
 
       // add new sub-triangles
-      // i'th sub triangle is adjacent to i'th neighbor, opposite from i'th vertex
-      const int subTri0 = triangles_.size();
-      const int subTri1 = subTri0 + 1;
-      const int subTri2 = subTri0 + 2;
-      triangles_.emplace_back(points_, v1, v2, newVertex, subTri1, subTri2, n0);
-      triangles_.emplace_back(points_, v2, v0, newVertex, subTri2, subTri0, n1);
-      triangles_.emplace_back(points_, v0, v1, newVertex, subTri0, subTri1, n2);
+      // i'th child is adjacent to i'th neighbor, opposite from i'th vertex
+      const int child0 = triangles_.size();
+      const int child1 = child0 + 1;
+      const int child2 = child0 + 2;
+      triangles_.emplace_back(points_, v1, v2, newVertex, child1, child2, n0);
+      triangles_.emplace_back(points_, v2, v0, newVertex, child2, child0, n1);
+      triangles_.emplace_back(points_, v0, v1, newVertex, child0, child1, n2);
 
       // fix pre-existing neighbor triangles to point to new triangles
       if (n0 >= 0) {
-        triangles_[n0].updateNeighbor(index, subTri0);
+        triangles_[n0].updateNeighbor(index, child0);
       }
       if (n1 >= 0) {
-        triangles_[n1].updateNeighbor(index, subTri1);
+        triangles_[n1].updateNeighbor(index, child1);
       }
       if (n2 >= 0) {
-        triangles_[n2].updateNeighbor(index, subTri2);
+        triangles_[n2].updateNeighbor(index, child2);
       }
 
       // point triangle to children
-      triangles_[index].setSubTriangles({subTri0, subTri1, subTri2});
+      triangles_[index].setChildren(child0, child1, child2);
     }
 
 
