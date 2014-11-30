@@ -10,6 +10,7 @@
 #include <array>
 #include <cassert>
 #include <string>
+#include <tuple>
 #include <vector>
 
 
@@ -54,8 +55,25 @@ class Triangle {
       }
     }
 
-    bool isPointInside(const Point& p) const {
-      return (sameSide(p,v0_, v1_,v2_) and sameSide(p,v1_, v0_,v2_) and sameSide(p,v2_, v0_,v1_));
+    std::tuple<bool,int> isPointInside(const Point& p) const {
+      const double a01p = orientedArea(v0_, v1_, p);
+      const double a12p = orientedArea(v1_, v2_, p);
+      const double a20p = orientedArea(v2_, v0_, p);
+      // point will be inside of all these areas have the same sign
+      const bool inside = (sign(a01p)==sign(a12p) and sign(a01p)==sign(a20p));
+
+      // if any area is too small, then treat the point as lying on edge
+      int edge = -1;
+      const double eps = 1e-12; // mostly arbitrary threshold
+      const double threshold = eps * fabs(orientedArea(v0_, v1_, v2_));
+      if (a01p < threshold)
+        edge = 2;
+      else if (a12p < threshold)
+        edge = 0;
+      else if (a20p < threshold)
+        edge = 1;
+
+      return std::make_tuple(inside, edge);
     }
 
     std::string toString() const {

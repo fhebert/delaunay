@@ -5,6 +5,14 @@
 
 #include <algorithm>
 
+
+template<typename T>
+int sign(T value)
+{
+  return (T(0) < value) - (value < T(0));
+}
+
+
 template<class container, class element>
 bool contains(const container& c, const element& e)
 {

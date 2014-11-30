@@ -25,18 +25,13 @@ double distance(const Point& a, const Point& b)
 }
 
 
-// are p1 and p2 on the same side of line a-b ?
-bool sameSide(const Point& p1, const Point& p2, const Point& a, const Point& b)
+// area of triangle abc (points going around ccw) as computed by
+// 1/2 * ((a->b) cross (a->c))
+double orientedArea(const Point& a, const Point& b, const Point& c)
 {
   const Point ab = {{b[0] - a[0], b[1] - a[1]}};
-  const Point a1 = {{p1[0] - a[0], p1[1] - a[1]}};
-  const Point a2 = {{p2[0] - a[0], p2[1] - a[1]}};
-
-  // we're working in 2d, so cross product can be simplified:
-  const double c1 = ab[0]*a1[1] - ab[1]*a1[0];
-  const double c2 = ab[0]*a2[1] - ab[1]*a2[0];
-
-  return (c1*c2 >= 0);
+  const Point ac = {{c[0] - a[0], c[1] - a[1]}};
+  return 0.5 * (ab[0]*ac[1] - ab[1]*ac[0]);
 }
 
 

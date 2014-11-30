@@ -97,7 +97,10 @@ class DelaunayTri {
     {
       int tri = -1;
       for (size_t i=0; i<4; ++i) {
-        if (triangles_[i].isPointInside(p)) {
+        bool isInside;
+        int onEdge;
+        std::tie(isInside, onEdge) = triangles_[i].isPointInside(p);
+        if (isInside) {
           tri = i;
           break;
         }
@@ -105,7 +108,10 @@ class DelaunayTri {
 
       while (not triangles_[tri].isLeaf()) {
         for (const auto& child : triangles_[tri].children()) {
-          if (triangles_[child].isPointInside(p)) {
+          bool isInside;
+          int onEdge;
+          std::tie(isInside, onEdge) = triangles_[child].isPointInside(p);
+          if (isInside) {
             tri = child;
             break;
           }
