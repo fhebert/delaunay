@@ -59,19 +59,22 @@ class Triangle {
       const double a01p = orientedArea(v0_, v1_, p);
       const double a12p = orientedArea(v1_, v2_, p);
       const double a20p = orientedArea(v2_, v0_, p);
-      // point will be inside of all these areas have the same sign
-      const bool inside = (sign(a01p)==sign(a12p) and sign(a01p)==sign(a20p));
+      // triangles are set up to all have the same orientation (+), so we need
+      // only verify that the sign is appropriate w.r.t. all sides
+      const bool inside = (a01p >= 0.0 and a12p >= 0.0 and a20p >= 0.0);
 
       // if any area is too small, then treat the point as lying on edge
       int edge = -1;
-      const double eps = 1e-12; // mostly arbitrary threshold
-      const double threshold = eps * fabs(orientedArea(v0_, v1_, v2_));
-      if (a01p < threshold)
-        edge = 2;
-      else if (a12p < threshold)
-        edge = 0;
-      else if (a20p < threshold)
-        edge = 1;
+      if (inside) {
+        // threshold of (1e-12 * area) is meant to be small, but hte prefactor is arbitarily chosen
+        const double threshold = 1e-12 * fabs(orientedArea(v0_, v1_, v2_));
+        if (a01p < threshold)
+          edge = 2;
+        else if (a12p < threshold)
+          edge = 0;
+        else if (a20p < threshold)
+          edge = 1;
+      }
 
       return std::make_tuple(inside, edge);
     }
