@@ -19,8 +19,7 @@ class Triangle {
   public:
     Triangle(const std::vector<Point>& points,
         const int a, const int b, const int c, const int na, const int nb, const int nc)
-      : v0_(points[a]), v1_(points[b]), v2_(points[c]),
-      vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}), children_({{-1,-1,-1}}) {}
+      : points_(points), vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}), children_({{-1,-1,-1}}) {}
 
 
     int vertex(const int i) const {
@@ -55,9 +54,12 @@ class Triangle {
     }
 
     std::tuple<bool,int> isPointInside(const Point& p) const {
-      const double a01p = orientedArea(v0_, v1_, p);
-      const double a12p = orientedArea(v1_, v2_, p);
-      const double a20p = orientedArea(v2_, v0_, p);
+      const Point& v0 = points_[vertices_[0]];
+      const Point& v1 = points_[vertices_[1]];
+      const Point& v2 = points_[vertices_[2]];
+      const double a01p = orientedArea(v0, v1, p);
+      const double a12p = orientedArea(v1, v2, p);
+      const double a20p = orientedArea(v2, v0, p);
       // triangles are set up to all have the same orientation (+), so we need
       // only verify that the sign is appropriate w.r.t. all sides
       const bool inside = (a01p >= 0.0 and a12p >= 0.0 and a20p >= 0.0);
@@ -66,7 +68,7 @@ class Triangle {
       int edge = -1;
       if (inside) {
         // threshold of (1e-12 * area) is meant to be small, but hte prefactor is arbitarily chosen
-        const double threshold = 1e-12 * fabs(orientedArea(v0_, v1_, v2_));
+        const double threshold = 1e-12 * fabs(orientedArea(v0, v1, v2));
         if (a01p < threshold)
           edge = 2;
         else if (a12p < threshold)
@@ -79,11 +81,14 @@ class Triangle {
     }
 
     std::string toString() const {
+      const Point& v0 = points_[vertices_[0]];
+      const Point& v1 = points_[vertices_[1]];
+      const Point& v2 = points_[vertices_[2]];
       using std::to_string;
-      return to_string(v0_[0]) + "  " + to_string(v0_[1])
-        + "\n" + to_string(v1_[0]) + "  " + to_string(v1_[1])
-        + "\n" + to_string(v2_[0]) + "  " + to_string(v2_[1])
-        + "\n" + to_string(v0_[0]) + "  " + to_string(v0_[1])
+      return to_string(v0[0]) + "  " + to_string(v0[1])
+        + "\n" + to_string(v1[0]) + "  " + to_string(v1[1])
+        + "\n" + to_string(v2[0]) + "  " + to_string(v2[1])
+        + "\n" + to_string(v0[0]) + "  " + to_string(v0[1])
         + "\n";
     }
 
@@ -91,9 +96,7 @@ class Triangle {
   private:
     // triangle defined by 3 vertices, has 3 neighbors
     // i'th neighbor is opposite from i'th vertex
-    const Point& v0_;
-    const Point& v1_;
-    const Point& v2_;
+    const std::vector<Point>& points_;
     const std::array<int, 3> vertices_;
     std::array<int, 3> neighbors_;
     std::array<int, 3> children_;
