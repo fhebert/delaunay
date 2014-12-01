@@ -133,6 +133,8 @@ class DelaunayTri {
       const int n2 = triangles_[index].neighbor(2);
 
       // TODO: special case for internal edge
+      // for now, assert that only external edges are allowed:
+      assert(edge == -1 or triangles_[index].neighbor(edge) == -1);
 
       // special case when new point is on external edge
       if (edge >= 0) { // then newVertex lies on edge
