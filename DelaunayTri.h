@@ -86,42 +86,43 @@ class DelaunayTri {
       points_.push_back(p);
 
       // find and split the enclosing triangle
-      const int index = findEnclosingTriangleIndex(p);
-      splitTriangle(index, newVertex);
+      int index, edge;
+      std::tie(index, edge) = findEnclosingTriangleIndex(p);
+      splitTriangle(index, edge, newVertex);
 
       // TODO: flip triangles for delaunay condition
     }
 
 
-    size_t findEnclosingTriangleIndex(const Point& p) const
+    std::tuple<int,int> findEnclosingTriangleIndex(const Point& p) const
     {
       int tri = -1;
+      int edge = -1;
       for (size_t i=0; i<4; ++i) {
-        bool isInside;
-        int onEdge;
-        std::tie(isInside, onEdge) = triangles_[i].isPointInside(p);
-        if (isInside) {
+        bool inside;
+        std::tie(inside, edge) = triangles_[i].isPointInside(p);
+        if (inside) {
           tri = i;
           break;
         }
       }
+      assert(tri >= 0 and "point was not enclosed by root-level triangles");
 
       while (not triangles_[tri].isLeaf()) {
         for (const auto& child : triangles_[tri].children()) {
-          bool isInside;
-          int onEdge;
-          std::tie(isInside, onEdge) = triangles_[child].isPointInside(p);
-          if (isInside) {
+          bool inside;
+          std::tie(inside, edge) = triangles_[child].isPointInside(p);
+          if (inside) {
             tri = child;
             break;
           }
         }
       }
-      return tri;
+      return std::make_tuple(tri, edge);
     }
 
 
-    void splitTriangle(const int index, const int newVertex)
+    void splitTriangle(const int index, const int edge, const int newVertex)
     {
       // shortcuts for sanity
       const int v0 = triangles_[index].vertex(0);
@@ -131,7 +132,31 @@ class DelaunayTri {
       const int n1 = triangles_[index].neighbor(1);
       const int n2 = triangles_[index].neighbor(2);
 
-      // TODO: special cases when new point is on internal or external edge
+      // TODO: special case for internal edge
+
+      // special case when new point is on external edge
+      if (edge >= 0) { // then newVertex lies on edge
+        const int child0 = triangles_.size();
+        const int child1 = child0 + 1;
+        triangles_[index].setChildren(child0, child1);
+        if (edge==0) {
+          triangles_.emplace_back(points_, v0, v1, newVertex, n0, child1, n2);
+          triangles_.emplace_back(points_, v2, v0, newVertex, child0, n0, n1);
+          if (n1 >= 0) triangles_[n1].updateNeighbor(index, child1);
+          if (n2 >= 0) triangles_[n2].updateNeighbor(index, child0);
+        } else if (edge==1) {
+          triangles_.emplace_back(points_, v0, v1, newVertex, child1, n1, n2);
+          triangles_.emplace_back(points_, v1, v2, newVertex, n1, child0, n0);
+          if (n0 >= 0) triangles_[n0].updateNeighbor(index, child1);
+          if (n2 >= 0) triangles_[n2].updateNeighbor(index, child0);
+        } else {
+          triangles_.emplace_back(points_, v2, v0, newVertex, n2, child1, n1);
+          triangles_.emplace_back(points_, v1, v2, newVertex, child0, n2, n0);
+          if (n0 >= 0) triangles_[n0].updateNeighbor(index, child1);
+          if (n1 >= 0) triangles_[n1].updateNeighbor(index, child0);
+        }
+        return;
+      }
 
       // add new sub-triangles
       // i'th child is adjacent to i'th neighbor, opposite from i'th vertex
