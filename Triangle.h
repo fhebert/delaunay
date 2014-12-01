@@ -19,8 +19,7 @@ class Triangle {
   public:
     Triangle(const std::vector<Point>& points,
         const int a, const int b, const int c, const int na, const int nb, const int nc)
-      : isLeaf_(true),
-      v0_(points[a]), v1_(points[b]), v2_(points[c]),
+      : v0_(points[a]), v1_(points[b]), v2_(points[c]),
       vertices_({{a,b,c}}), neighbors_({{na,nb,nc}}), children_({{-1,-1,-1}}) {}
 
 
@@ -92,7 +91,6 @@ class Triangle {
   private:
     // triangle defined by 3 vertices, has 3 neighbors
     // i'th neighbor is opposite from i'th vertex
-    bool isLeaf_;
     const Point& v0_;
     const Point& v1_;
     const Point& v2_;
