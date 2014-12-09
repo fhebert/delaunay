@@ -60,7 +60,6 @@ class DelaunayTri {
       // iteratively add each point
       for (const auto& newpoint : MorePoints) {
         insertPointAndRetriangulate(newpoint);
-        writeToFile("temp.out");
       }
       return true;
     }
@@ -89,8 +88,6 @@ class DelaunayTri {
       int index, edge;
       std::tie(index, edge) = findEnclosingTriangleIndex(p);
       splitTriangle(index, edge, newVertex);
-
-      // TODO: flip triangles for delaunay condition
     }
 
 
@@ -125,6 +122,7 @@ class DelaunayTri {
     void splitTriangle(const int index, const int edge, const int newVertex)
     {
       // shortcuts for sanity
+      assert(index >= 0 and "can't index an invalid triangle");
       const int v0 = triangles_[index].vertex(0);
       const int v1 = triangles_[index].vertex(1);
       const int v2 = triangles_[index].vertex(2);
@@ -157,6 +155,8 @@ class DelaunayTri {
           if (n0 >= 0) triangles_[n0].updateNeighbor(index, child1);
           if (n1 >= 0) triangles_[n1].updateNeighbor(index, child0);
         }
+        delaunayFlip(child0, newVertex);
+        delaunayFlip(child1, newVertex);
         return;
       }
 
@@ -182,8 +182,75 @@ class DelaunayTri {
 
       // point triangle to children
       triangles_[index].setChildren(child0, child1, child2);
+
+      // check delaunay
+      delaunayFlip(child0, newVertex);
+      delaunayFlip(child1, newVertex);
+      delaunayFlip(child2, newVertex);
     }
 
+
+    void delaunayFlip(const int tri, const int keyPoint)
+    {
+      const int oppTri = triangles_[tri].neighborAcrossGlobalPoint(keyPoint);
+      if (oppTri == -1) return;
+
+      // find point of oppTri that is accross from keyPoint:
+      int oppPoint = -1;
+      for (int pt=0; pt<3; ++pt) {
+        if (triangles_[oppTri].neighbor(pt) == tri) {
+          oppPoint = triangles_[oppTri].vertex(pt);
+          break;
+        }
+      }
+
+      const double keyAngle = triangles_[tri].angleAtPoint(keyPoint);
+      const double oppAngle = triangles_[oppTri].angleAtPoint(oppPoint);
+
+      // check delaunay condition
+      if (keyAngle + oppAngle > M_PI) {
+        int tri1, tri2;
+        std::tie(tri1, tri2) = swapTwoTriangles(tri, keyPoint, oppTri, oppPoint);
+        delaunayFlip(tri1, keyPoint);
+        delaunayFlip(tri2, keyPoint);
+      }
+    }
+
+
+    std::tuple<int, int> swapTwoTriangles(const int tri1, const int pt1,
+        const int tri2, const int pt2)
+    {
+      const int child0 = triangles_.size();
+      const int child1 = child0 + 1;
+
+      // TODO a more elegant way for the entire thing
+      int localIndex1 = -1;
+      for (int i=0; i<3; ++i) {
+        if (triangles_[tri1].vertex(i) == pt1) {
+          localIndex1 = i;
+          break;
+        }
+      }
+      const int shared1 = triangles_[tri1].vertex((localIndex1+1)%3);
+      const int shared2 = triangles_[tri1].vertex((localIndex1+2)%3);
+
+      const int n1_1 = triangles_[tri1].neighborAcrossGlobalPoint(shared1);
+      const int n1_2 = triangles_[tri1].neighborAcrossGlobalPoint(shared2);
+      const int n2_1 = triangles_[tri2].neighborAcrossGlobalPoint(shared1);
+      const int n2_2 = triangles_[tri2].neighborAcrossGlobalPoint(shared2);
+
+      triangles_.emplace_back(points_, pt1, pt2, shared2, n2_1, n1_1, child1);
+      triangles_.emplace_back(points_, pt1, shared1, pt2, n2_2, child0, n1_2);
+
+      if (n1_1 >= 0) triangles_[n1_1].updateNeighbor(tri1, child0);
+      if (n1_2 >= 0) triangles_[n1_2].updateNeighbor(tri1, child1);
+      if (n2_1 >= 0) triangles_[n2_1].updateNeighbor(tri2, child0);
+      if (n2_2 >= 0) triangles_[n2_2].updateNeighbor(tri2, child1);
+
+      triangles_[tri1].setChildren(child0, child1);
+      triangles_[tri2].setChildren(child0, child1);
+      return std::make_tuple(child0, child1);
+    }
 
 
   private:
