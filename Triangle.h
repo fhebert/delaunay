@@ -32,6 +32,17 @@ class Triangle {
       return neighbors_[i];
     }
 
+    int neighborAcrossGlobalPoint(const int pt) const {
+      assert(pt==vertices_[0] or pt==vertices_[1] or pt==vertices_[2]);
+      if (pt == vertices_[0]) {
+        return neighbors_[0];
+      } else if (pt == vertices_[1]) {
+        return neighbors_[1];
+      } else {
+        return neighbors_[2];
+      }
+    }
+
     void setChildren(const int ca, const int cb, const int cc=-1) {
       children_[0] = ca;
       children_[1] = cb;
@@ -78,6 +89,25 @@ class Triangle {
       }
 
       return std::make_tuple(inside, edge);
+    }
+
+    double angleAtPoint(const int pt) const {
+      assert(pt==vertices_[0] or pt==vertices_[1] or pt==vertices_[2]);
+      int i = -1;
+      if (pt == vertices_[0]) {
+        i = 0;
+      } else if (pt == vertices_[1]) {
+        i = 1;
+      } else {
+        i = 2;
+      }
+      const Point& vi = points_[vertices_[i]]; // point i
+      const Point& va = points_[vertices_[(i+1) % 3]];
+      const Point& vb = points_[vertices_[(i+2) % 3]];
+      const double dia = distance(vi, va);
+      const double dib = distance(vi, vb);
+      const double dab = distance(va, vb);
+      return acos((dia*dia + dib*dib - dab*dab) / (2*dia*dib));
     }
 
     std::string toString() const {
