@@ -2,7 +2,6 @@
 #ifndef DELAUNAY_DELAUNAYTRI_H
 #define DELAUNAY_DELAUNAYTRI_H
 
-
 #include "Point.h"
 #include "Triangle.h"
 #include "VectorOps.h"
@@ -12,7 +11,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
 
 
 // following Lee & Schachter 1980
@@ -259,5 +257,6 @@ class DelaunayTri {
     const double xmin_, xmax_;
     const double ymin_, ymax_;
 };
+
 
 #endif // DELAUNAY_DELAUNAYTRI_H

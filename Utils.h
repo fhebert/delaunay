@@ -2,7 +2,6 @@
 #ifndef DELAUNAY_UTILS_H
 #define DELAUNAY_UTILS_H
 
-
 #include <algorithm>
 
 

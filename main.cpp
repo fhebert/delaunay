@@ -1,5 +1,4 @@
 
-
 #include "DelaunayTri.h"
 #include "Point.h"
 

@@ -2,7 +2,6 @@
 #ifndef DELAUNAY_TRIANGLE_H
 #define DELAUNAY_TRIANGLE_H
 
-
 #include "Point.h"
 #include "VectorOps.h"
 #include "Utils.h"
