@@ -1,2 +1,4 @@
 /DelaunayTri
+/triangulation.data
+.DS_Store
 *.o
