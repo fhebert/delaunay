@@ -2,6 +2,8 @@
 #ifndef DELAUNAY_VECTOR_OPS_H
 #define DELAUNAY_VECTOR_OPS_H
 
+#include "Point.h"
+
 #include <cmath>
 
 
