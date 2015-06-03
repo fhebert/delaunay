@@ -6,6 +6,7 @@
 #include "Triangle.h"
 #include "VectorOps.h"
 
+#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -72,6 +73,43 @@ class DelaunayTri {
       }
       outfile.close();
     }
+
+
+    std::vector<int> getConnectedPoints(const int pt) const {
+      // TODO a more efficient implementation would be possible if the
+      //      points knew which triangles they belonged to: then instead of
+      //      a search, this could be solved by a look-up
+      std::vector<int> result;
+      for (auto tri : triangles_) {
+        if (tri.isLeaf()) {
+          bool hasPoint = false;
+          const auto verts = tri.vertices();
+          for (auto v : verts) {
+            if (v == pt) {
+              hasPoint = true;
+              break;
+            }
+          }
+          if (hasPoint) {
+            for (auto v : verts) {
+              if (v != pt) {
+                result.push_back(v);
+              }
+            }
+          }
+        }
+      }
+      // erase dupes
+      std::sort(result.begin(), result.end());
+      auto last = std::unique(result.begin(), result.end());
+      result.erase(last,result.end());
+      return result;
+    }
+
+    //const std::vector<Point>& getPointsRef() const {return points_;}
+    const Point& point(const size_t i) const {return points_[i];}
+    size_t getNumPoints() const {return points_.size();}
+    //const Triangle& getTriangle(const size_t i) const {return triangles_[i];}
 
 
 
