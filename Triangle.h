@@ -48,7 +48,8 @@ class Triangle {
       children_[2] = cc;
     }
 
-    std::array<int, 3> children() const { return children_; }
+    const std::array<int,3>& vertices() const { return vertices_; }
+    const std::array<int,3>& children() const { return children_; }
 
     bool isLeaf() const { return children_[0] == -1; }
 
