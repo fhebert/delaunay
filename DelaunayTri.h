@@ -106,11 +106,40 @@ class DelaunayTri {
       return result;
     }
 
-    //const std::vector<Point>& getPointsRef() const {return points_;}
+
+    std::tuple<int,int> findEnclosingTriangleIndex(const Point& p) const
+    {
+      int tri = -1;
+      int edge = -1;
+      // find root-level triangle that encloses point
+      for (size_t i=0; i<4; ++i) {
+        bool inside;
+        std::tie(inside, edge) = triangles_[i].isPointInside(p);
+        if (inside) {
+          tri = i;
+          break;
+        }
+      }
+      assert(tri >= 0 and "point was not enclosed by root-level triangles");
+
+      // iterate through children to find leaf triangle enclosing point
+      while (not triangles_[tri].isLeaf()) {
+        for (const auto& child : triangles_[tri].children()) {
+          bool inside;
+          std::tie(inside, edge) = triangles_[child].isPointInside(p);
+          if (inside) {
+            tri = child;
+            break;
+          }
+        }
+      }
+      return std::make_tuple(tri, edge);
+    }
+
+
+    const Triangle& triangle(const size_t i) const {return triangles_[i];}
     const Point& point(const size_t i) const {return points_[i];}
     size_t getNumPoints() const {return points_.size();}
-    //const Triangle& getTriangle(const size_t i) const {return triangles_[i];}
-
 
 
   private:
@@ -124,34 +153,6 @@ class DelaunayTri {
       int index, edge;
       std::tie(index, edge) = findEnclosingTriangleIndex(p);
       splitTriangle(index, edge, newVertex);
-    }
-
-
-    std::tuple<int,int> findEnclosingTriangleIndex(const Point& p) const
-    {
-      int tri = -1;
-      int edge = -1;
-      for (size_t i=0; i<4; ++i) {
-        bool inside;
-        std::tie(inside, edge) = triangles_[i].isPointInside(p);
-        if (inside) {
-          tri = i;
-          break;
-        }
-      }
-      assert(tri >= 0 and "point was not enclosed by root-level triangles");
-
-      while (not triangles_[tri].isLeaf()) {
-        for (const auto& child : triangles_[tri].children()) {
-          bool inside;
-          std::tie(inside, edge) = triangles_[child].isPointInside(p);
-          if (inside) {
-            tri = child;
-            break;
-          }
-        }
-      }
-      return std::make_tuple(tri, edge);
     }
 
 
