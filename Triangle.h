@@ -110,6 +110,20 @@ class Triangle {
       return acos((dia*dia + dib*dib - dab*dab) / (2*dia*dib));
     }
 
+    // tranformation to barycentric coordinates from
+    // http://en.wikipedia.org/wiki/Barycentric_coordinate_system
+    std::array<double,3> barycentricCoords(const Point& x) const {
+      const double x3 = points_[vertices_[2]][0];
+      const double y3 = points_[vertices_[2]][1];
+      const double x23 = points_[vertices_[1]][0] - x3;
+      const double y23 = points_[vertices_[1]][1] - y3;
+      const double x13 = points_[vertices_[0]][0] - x3;
+      const double y13 = points_[vertices_[0]][1] - y3;
+      const double l1 = (y23*(x[0]-x3) - x23*(x[1]-y3))/(y23*x13 - x23*y13);
+      const double l2 = (-y13*(x[0]-x3) + x13*(x[1]-y3))/(y23*x13 - x23*y13);
+      return std::array<double,3>({{l1, l2, 1-l1-l2}});
+    }
+
     std::string toString() const {
       const Point& v0 = points_[vertices_[0]];
       const Point& v1 = points_[vertices_[1]];
