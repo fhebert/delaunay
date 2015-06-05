@@ -1,5 +1,6 @@
 
 #include "DelaunayTri.h"
+#include "Interpolator.h"
 #include "Point.h"
 
 #include <algorithm>
