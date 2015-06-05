@@ -78,7 +78,7 @@ class Triangle {
       // if any area is too small, then treat the point as lying on edge
       int edge = -1;
       if (inside) {
-        // threshold of (1e-12 * area) is meant to be small, but hte prefactor is arbitarily chosen
+        // threshold of (1e-12 * area) is meant to be small, but the prefactor is arbitarily chosen
         const double threshold = 1e-12 * fabs(orientedArea(v0, v1, v2));
         if (a01p < threshold)
           edge = 2;
