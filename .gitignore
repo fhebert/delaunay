@@ -1,4 +1,5 @@
 /DelaunayTri
+/interpolated.data
 /triangulation.data
 .DS_Store
 *.o
