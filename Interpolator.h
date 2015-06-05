@@ -17,11 +17,15 @@ class Interpolator {
         const std::vector<std::vector<double>>& data)
       : fill_value_(1e234), tri_(tri), data_(data)
     {
+      for (const auto dataset : data) {
+        assert(dataset.size()==tri.getNumPoints() and
+            "datasets incompatible with triangulation");
+      }
       gradients_ = estimateGradientsGlobal(tri, data);
     }
 
 
-    std::vector<double> evaluateAt(const Point& x)
+    std::vector<double> evaluateAt(const Point& x) const
     {
       int isimplex, iedge;
       std::tie(isimplex,iedge) = tri_.findEnclosingTriangleIndex(x);
@@ -60,10 +64,6 @@ class Interpolator {
         const double tol=1e-6)
     {
       const size_t ndatasets = data.size();
-      for (const auto dataset : data) {
-        assert(dataset.size()==tri.getNumPoints() and
-            "datasets incompatible with triangulation");
-      }
       std::vector<std::vector<std::array<double,2>>> grad(
           ndatasets, std::vector<std::array<double,2>>(tri.getNumPoints(), {{0,0}}));
 
@@ -75,7 +75,7 @@ class Interpolator {
             tol,
             grad[k]);
 
-        assert(ret==0 and "Gradient estimation did not converge, the results may be inaccurate");
+        assert(ret > 0 and "Gradient estimation did not converge, the results may be inaccurate");
       }
 
       return grad;
