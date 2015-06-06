@@ -5,7 +5,12 @@
 #include "DelaunayTri.h"
 #include "Point.h"
 
-#include <cassert>
+// The functions in this file are the helper functions used in setting up a
+// C1 continuous Clough-Tocher interpolation on a Delaunay mesh. See
+// http://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.interpolate.CloughTocher2DInterpolator.html
+//
+// The code itself closely follows (up to syntax and some type changes) the
+// scipy implementation, see: scipy/interpolate/interpnd.pyx
 
 
 int scipy_estimate_gradients_2d_global(
