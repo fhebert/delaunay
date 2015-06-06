@@ -252,8 +252,7 @@ double scipy_clough_tocher_2d_single(
   double g2 = 0;
   double g3 = 0;
   for (size_t k=0; k<3; ++k) {
-    const int itri = d.triangle(isimplex).neighborAcrossGlobalPoint(
-        d.triangle(isimplex).vertex(k));
+    const int itri = d.triangle(isimplex).neighbor(k);
 
     if (itri == -1) {
       // No neighbour.
