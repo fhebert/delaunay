@@ -36,6 +36,13 @@ class DelaunayTri {
       triangles_.emplace_back(points_, 1, 2, 4, 2, 0, -1);
       triangles_.emplace_back(points_, 2, 3, 4, 3, 1, -1);
       triangles_.emplace_back(points_, 3, 0, 4, 0, 2, -1);
+
+      // for each point, add its triangles to the connection list
+      trianglesUsingPoints_.push_back({{0,3}});
+      trianglesUsingPoints_.push_back({{0,1}});
+      trianglesUsingPoints_.push_back({{1,2}});
+      trianglesUsingPoints_.push_back({{2,3}});
+      trianglesUsingPoints_.push_back({{0,1,2,3}});
     }
 
 
@@ -76,26 +83,11 @@ class DelaunayTri {
 
 
     std::vector<int> getConnectedPoints(const int pt) const {
-      // TODO a more efficient implementation would be possible if the
-      //      points knew which triangles they belonged to: then instead of
-      //      a search, this could be solved by a look-up
       std::vector<int> result;
-      for (auto tri : triangles_) {
-        if (tri.isLeaf()) {
-          bool hasPoint = false;
-          const auto verts = tri.vertices();
-          for (auto v : verts) {
-            if (v == pt) {
-              hasPoint = true;
-              break;
-            }
-          }
-          if (hasPoint) {
-            for (auto v : verts) {
-              if (v != pt) {
-                result.push_back(v);
-              }
-            }
+      for (const int tri : trianglesUsingPoints_[pt]) {
+        for (const int vert : triangles_[tri].vertices()) {
+          if (vert != pt) {
+            result.push_back(vert);
           }
         }
       }
@@ -148,6 +140,7 @@ class DelaunayTri {
       // add point to list
       const int newVertex = points_.size();
       points_.push_back(p);
+      trianglesUsingPoints_.push_back({{}});
 
       // find and split the enclosing triangle
       int index, edge;
@@ -179,16 +172,34 @@ class DelaunayTri {
         if (edge==0) {
           triangles_.emplace_back(points_, v0, v1, newVertex, n0, child1, n2);
           triangles_.emplace_back(points_, v2, v0, newVertex, child0, n0, n1);
+          trianglesUsingPoints_[v0].push_back(child0);
+          trianglesUsingPoints_[v0].push_back(child1);
+          trianglesUsingPoints_[v1].push_back(child0);
+          trianglesUsingPoints_[v2].push_back(child1);
+          trianglesUsingPoints_[newVertex].push_back(child0);
+          trianglesUsingPoints_[newVertex].push_back(child1);
           if (n1 >= 0) triangles_[n1].updateNeighbor(index, child1);
           if (n2 >= 0) triangles_[n2].updateNeighbor(index, child0);
         } else if (edge==1) {
           triangles_.emplace_back(points_, v0, v1, newVertex, child1, n1, n2);
           triangles_.emplace_back(points_, v1, v2, newVertex, n1, child0, n0);
+          trianglesUsingPoints_[v0].push_back(child0);
+          trianglesUsingPoints_[v1].push_back(child0);
+          trianglesUsingPoints_[v1].push_back(child1);
+          trianglesUsingPoints_[v2].push_back(child1);
+          trianglesUsingPoints_[newVertex].push_back(child0);
+          trianglesUsingPoints_[newVertex].push_back(child1);
           if (n0 >= 0) triangles_[n0].updateNeighbor(index, child1);
           if (n2 >= 0) triangles_[n2].updateNeighbor(index, child0);
         } else {
           triangles_.emplace_back(points_, v2, v0, newVertex, n2, child1, n1);
           triangles_.emplace_back(points_, v1, v2, newVertex, child0, n2, n0);
+          trianglesUsingPoints_[v0].push_back(child0);
+          trianglesUsingPoints_[v1].push_back(child1);
+          trianglesUsingPoints_[v2].push_back(child0);
+          trianglesUsingPoints_[v2].push_back(child1);
+          trianglesUsingPoints_[newVertex].push_back(child0);
+          trianglesUsingPoints_[newVertex].push_back(child1);
           if (n0 >= 0) triangles_[n0].updateNeighbor(index, child1);
           if (n1 >= 0) triangles_[n1].updateNeighbor(index, child0);
         }
@@ -205,6 +216,15 @@ class DelaunayTri {
       triangles_.emplace_back(points_, v1, v2, newVertex, child1, child2, n0);
       triangles_.emplace_back(points_, v2, v0, newVertex, child2, child0, n1);
       triangles_.emplace_back(points_, v0, v1, newVertex, child0, child1, n2);
+      trianglesUsingPoints_[v0].push_back(child1);
+      trianglesUsingPoints_[v0].push_back(child2);
+      trianglesUsingPoints_[v1].push_back(child0);
+      trianglesUsingPoints_[v1].push_back(child2);
+      trianglesUsingPoints_[v2].push_back(child0);
+      trianglesUsingPoints_[v2].push_back(child1);
+      trianglesUsingPoints_[newVertex].push_back(child0);
+      trianglesUsingPoints_[newVertex].push_back(child1);
+      trianglesUsingPoints_[newVertex].push_back(child2);
 
       // fix pre-existing neighbor triangles to point to new triangles
       if (n0 >= 0) {
@@ -278,6 +298,12 @@ class DelaunayTri {
 
       triangles_.emplace_back(points_, pt1, pt2, shared2, n2_1, n1_1, child1);
       triangles_.emplace_back(points_, pt1, shared1, pt2, n2_2, child0, n1_2);
+      trianglesUsingPoints_[pt1].push_back(child0);
+      trianglesUsingPoints_[pt1].push_back(child1);
+      trianglesUsingPoints_[pt2].push_back(child0);
+      trianglesUsingPoints_[pt2].push_back(child1);
+      trianglesUsingPoints_[shared1].push_back(child1);
+      trianglesUsingPoints_[shared2].push_back(child0);
 
       if (n1_1 >= 0) triangles_[n1_1].updateNeighbor(tri1, child0);
       if (n1_2 >= 0) triangles_[n1_2].updateNeighbor(tri1, child1);
@@ -293,6 +319,7 @@ class DelaunayTri {
   private:
     std::vector<Point> points_;
     std::vector<Triangle> triangles_;
+    std::vector<std::vector<int>> trianglesUsingPoints_;
     const double xmin_, xmax_;
     const double ymin_, ymax_;
 };
