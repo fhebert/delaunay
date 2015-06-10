@@ -12,4 +12,13 @@ bool contains(const container& c, const element& e)
 }
 
 
+template<class container>
+void erase_dupes(container& c)
+{
+  std::sort(c.begin(), c.end());
+  auto last = std::unique(c.begin(), c.end());
+  c.erase(last, c.end());
+}
+
+
 #endif // DELAUNAY_UTILS_H

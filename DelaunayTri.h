@@ -5,8 +5,8 @@
 #include "Point.h"
 #include "Triangle.h"
 #include "VectorOps.h"
+#include "Utils.h"
 
-#include <algorithm>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -91,10 +91,7 @@ class DelaunayTri {
           }
         }
       }
-      // erase dupes
-      std::sort(result.begin(), result.end());
-      auto last = std::unique(result.begin(), result.end());
-      result.erase(last,result.end());
+      erase_dupes(result);
       return result;
     }
 
