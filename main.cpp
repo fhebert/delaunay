@@ -12,38 +12,51 @@
 #include <vector>
 
 
+namespace {
+  std::vector<Point> pointsToAdd(
+      const double xmin, const double xmax,
+      const double ymin, const double ymax)
+  {
+    std::vector<Point> points;
 
-std::vector<Point> pointsToAdd(
-    const double xmin, const double xmax,
-    const double ymin, const double ymax)
-{
-  std::vector<Point> points;
+    // edge points
+    const int resolution = 16;
+    const int nx = fabs(ceil( (xmax-xmin) * resolution));
+    const int ny = fabs(ceil( (ymax-ymin) * resolution));
+    for (int ix = 1; ix < nx-1; ++ix) {
+      const double dx = (xmax-xmin) * ix/(nx-1.0);
+      points.push_back({{xmin + dx, ymin}});
+      points.push_back({{xmin + dx, ymax}});
+    }
+    for (int iy = 1; iy < ny-1; ++iy) {
+      const double dy = (ymax-ymin) * iy/(ny-1.0);
+      points.push_back({{xmin, ymin + dy}});
+      points.push_back({{xmax, ymin + dy}});
+    }
 
-  // edge points
-  const int resolution = 16;
-  const int nx = fabs(ceil( (xmax-xmin) * resolution));
-  const int ny = fabs(ceil( (ymax-ymin) * resolution));
-  for (int ix = 1; ix < nx-1; ++ix) {
-    const double dx = (xmax-xmin) * ix/(nx-1.0);
-    points.push_back({{xmin + dx, ymin}});
-    points.push_back({{xmin + dx, ymax}});
-  }
-  for (int iy = 1; iy < ny-1; ++iy) {
-    const double dy = (ymax-ymin) * iy/(ny-1.0);
-    points.push_back({{xmin, ymin + dy}});
-    points.push_back({{xmax, ymin + dy}});
+    // interior points
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<> dist(0,1);
+    for (int i = 0; i < nx*ny; ++i) {
+      const double x = xmin + dist(mt) * (xmax-xmin);
+      const double y = ymin + dist(mt) * (ymax-ymin);
+      points.push_back({{x, y}});
+    }
+    return points;
   }
 
-  // interior points
-  std::random_device rd;
-  std::mt19937 mt(rd());
-  std::uniform_real_distribution<> dist(0,1);
-  for (int i = 0; i < nx*ny; ++i) {
-    const double x = xmin + dist(mt) * (xmax-xmin);
-    const double y = ymin + dist(mt) * (ymax-ymin);
-    points.push_back({{x, y}});
+  double f(const double x, const double y) {
+    return x*x*y;
   }
-  return points;
+
+  double g(const double x, const double y) {
+    return exp(-5 * ((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)));
+  }
+
+  double h(const double x, const double y) {
+    return sin(6*x) * cos(9*y);
+  }
 }
 
 
@@ -78,9 +91,9 @@ int main() {
   for (size_t i=0; i<numpts; ++i) {
     const double x = delaunay.point(i)[0];
     const double y = delaunay.point(i)[1];
-    data[0][i] = x*x*y;
-    data[1][i] = exp(-5 * ((x-0.5)*(x-0.5) + (y-0.5)*(y-0.5)));
-    data[2][i] = sin(6*x) * cos(9*y);
+    data[0][i] = f(x,y);
+    data[1][i] = g(x,y);
+    data[2][i] = h(x,y);
   }
 
   // grid to interpolate the data onto
@@ -107,8 +120,11 @@ int main() {
   // print to file
   std::ofstream outfile("interpolated.data");
   for (int i=0; i<intres*intres; ++i) {
-    outfile << intgrid[i][0] << "  " << intgrid[i][1] << "  "
-            << intdata[0][i] << "  " << intdata[1][i] << "  " << intdata[2][i] << "\n";
+    const double x = intgrid[i][0];
+    const double y = intgrid[i][1];
+    outfile << x << "  " << y << "  "
+            << intdata[0][i] << "  " << intdata[1][i] << "  " << intdata[2][i] << "  "
+            << f(x,y) << "  " << g(x,y) << "  " << h(x,y) << "\n";
   }
   outfile.close();
 
