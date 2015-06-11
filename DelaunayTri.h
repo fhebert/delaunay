@@ -82,7 +82,8 @@ class DelaunayTri {
     }
 
 
-    std::vector<int> getConnectedPoints(const int pt) const {
+    std::vector<int> getConnectedPoints(const int pt) const
+    {
       std::vector<int> result;
       for (const int tri : trianglesWithPoint_[pt]) {
         for (const int vert : triangles_[tri].vertices()) {
@@ -158,7 +159,7 @@ class DelaunayTri {
       const int n2 = triangles_[index].neighbor(2);
 
       // TODO: special case for internal edge
-      // for now, assert that only external edges are allowed:
+      // for now, assert that only external edges are allowed
       assert(edge == -1 or triangles_[index].neighbor(edge) == -1);
 
       // special case when new point is on external edge
@@ -249,7 +250,7 @@ class DelaunayTri {
       const int oppTri = triangles_[tri].neighborAcrossGlobalPoint(keyPoint);
       if (oppTri == -1) return;
 
-      // find point of oppTri that is accross from keyPoint:
+      // find point of oppTri that is across from keyPoint
       int oppPoint = -1;
       for (int pt=0; pt<3; ++pt) {
         if (triangles_[oppTri].neighbor(pt) == tri) {
