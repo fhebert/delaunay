@@ -151,19 +151,56 @@ class DelaunayTri {
     {
       // shortcuts for sanity
       assert(index >= 0 and "can't index an invalid triangle");
-      const int v0 = triangles_[index].vertex(0);
-      const int v1 = triangles_[index].vertex(1);
-      const int v2 = triangles_[index].vertex(2);
-      const int n0 = triangles_[index].neighbor(0);
-      const int n1 = triangles_[index].neighbor(1);
-      const int n2 = triangles_[index].neighbor(2);
 
-      // TODO: special case for internal edge
-      // for now, assert that only external edges are allowed
-      assert(edge == -1 or triangles_[index].neighbor(edge) == -1);
+      // most likely scenario: newVertex is contained in triangle "index"
+      // then, edge has its default value of -1
+      if (edge == -1) {
+        // add new sub-triangles
+        // i'th child is adjacent to i'th neighbor, opposite from i'th vertex
+        const int v0 = triangles_[index].vertex(0);
+        const int v1 = triangles_[index].vertex(1);
+        const int v2 = triangles_[index].vertex(2);
+        const int n0 = triangles_[index].neighbor(0);
+        const int n1 = triangles_[index].neighbor(1);
+        const int n2 = triangles_[index].neighbor(2);
+        const int child0 = triangles_.size();
+        const int child1 = child0 + 1;
+        const int child2 = child0 + 2;
+        triangles_.emplace_back(points_, v1, v2, newVertex, child1, child2, n0);
+        triangles_.emplace_back(points_, v2, v0, newVertex, child2, child0, n1);
+        triangles_.emplace_back(points_, v0, v1, newVertex, child0, child1, n2);
+        trianglesWithPoint_[v0].push_back(child1);
+        trianglesWithPoint_[v0].push_back(child2);
+        trianglesWithPoint_[v1].push_back(child0);
+        trianglesWithPoint_[v1].push_back(child2);
+        trianglesWithPoint_[v2].push_back(child0);
+        trianglesWithPoint_[v2].push_back(child1);
+        trianglesWithPoint_[newVertex].push_back(child0);
+        trianglesWithPoint_[newVertex].push_back(child1);
+        trianglesWithPoint_[newVertex].push_back(child2);
 
-      // special case when new point is on external edge
-      if (edge >= 0) { // then newVertex lies on edge
+        // fix pre-existing neighbor triangles to point to new triangles
+        if (n0 >= 0) {
+          triangles_[n0].updateNeighbor(index, child0);
+        }
+        if (n1 >= 0) {
+          triangles_[n1].updateNeighbor(index, child1);
+        }
+        if (n2 >= 0) {
+          triangles_[n2].updateNeighbor(index, child2);
+        }
+
+        // point triangle to children
+        triangles_[index].setChildren(child0, child1, child2);
+
+        // check delaunay
+        delaunayFlip(child0, newVertex);
+        delaunayFlip(child1, newVertex);
+        delaunayFlip(child2, newVertex);
+
+      }
+      // special case for external edges
+      else if (edge >= 0 and triangles_[index].neighbor(edge) == -1) {
         // going around the triangle in the positive (CCW) direction, starting
         // with the edge 'edge' (which contains newVertex), permutation holds
         // the correct ordering of the triangle's local vertex indices {0,1,2}
@@ -194,45 +231,13 @@ class DelaunayTri {
 
         delaunayFlip(child0, newVertex);
         delaunayFlip(child1, newVertex);
-        return;
+      }
+      // TODO: special case for internal edge
+      else {
+        assert(false and "can't yet do internal edges");
       }
 
-      // add new sub-triangles
-      // i'th child is adjacent to i'th neighbor, opposite from i'th vertex
-      const int child0 = triangles_.size();
-      const int child1 = child0 + 1;
-      const int child2 = child0 + 2;
-      triangles_.emplace_back(points_, v1, v2, newVertex, child1, child2, n0);
-      triangles_.emplace_back(points_, v2, v0, newVertex, child2, child0, n1);
-      triangles_.emplace_back(points_, v0, v1, newVertex, child0, child1, n2);
-      trianglesWithPoint_[v0].push_back(child1);
-      trianglesWithPoint_[v0].push_back(child2);
-      trianglesWithPoint_[v1].push_back(child0);
-      trianglesWithPoint_[v1].push_back(child2);
-      trianglesWithPoint_[v2].push_back(child0);
-      trianglesWithPoint_[v2].push_back(child1);
-      trianglesWithPoint_[newVertex].push_back(child0);
-      trianglesWithPoint_[newVertex].push_back(child1);
-      trianglesWithPoint_[newVertex].push_back(child2);
-
-      // fix pre-existing neighbor triangles to point to new triangles
-      if (n0 >= 0) {
-        triangles_[n0].updateNeighbor(index, child0);
-      }
-      if (n1 >= 0) {
-        triangles_[n1].updateNeighbor(index, child1);
-      }
-      if (n2 >= 0) {
-        triangles_[n2].updateNeighbor(index, child2);
-      }
-
-      // point triangle to children
-      triangles_[index].setChildren(child0, child1, child2);
-
-      // check delaunay
-      delaunayFlip(child0, newVertex);
-      delaunayFlip(child1, newVertex);
-      delaunayFlip(child2, newVertex);
+      return;
     }
 
 
