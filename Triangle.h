@@ -42,6 +42,19 @@ class Triangle {
       }
     }
 
+    int pointOppositeFromNeighbor(const int neighbor) const {
+      assert(neighbor==neighbors_[0]
+          or neighbor==neighbors_[1]
+          or neighbor==neighbors_[2]);
+      if (neighbor == neighbors_[0]) {
+        return vertices_[0];
+      } else if (neighbor == neighbors_[1]) {
+        return vertices_[1];
+      } else {
+        return vertices_[2];
+      }
+    }
+
     void setChildren(const int ca, const int cb, const int cc=-1) {
       children_[0] = ca;
       children_[1] = cb;

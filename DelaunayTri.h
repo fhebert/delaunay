@@ -231,16 +231,10 @@ class DelaunayTri {
     void delaunayFlip(const int tri, const int keyPoint)
     {
       const int oppTri = triangles_[tri].neighborAcrossGlobalPoint(keyPoint);
-      if (oppTri == -1) return;
+      if (oppTri == -1) return; // it's an external edge
 
-      // find point of oppTri that is across from keyPoint
-      int oppPoint = -1;
-      for (int pt=0; pt<3; ++pt) {
-        if (triangles_[oppTri].neighbor(pt) == tri) {
-          oppPoint = triangles_[oppTri].vertex(pt);
-          break;
-        }
-      }
+      // find point of oppTri that is across from tri
+      const int oppPoint = triangles_[oppTri].pointOppositeFromNeighbor(tri);
 
       const double keyAngle = triangles_[tri].angleAtPoint(keyPoint);
       const double oppAngle = triangles_[oppTri].angleAtPoint(oppPoint);
