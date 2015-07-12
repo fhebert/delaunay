@@ -24,25 +24,21 @@ class DelaunayTri {
     DelaunayTri(const double xmin, const double xmax, const double ymin, const double ymax)
     : xmin_(xmin), xmax_(xmax), ymin_(ymin), ymax_(ymax)
     {
-      // initialize the corner and center points
+      // initialize the corner points
       points_.push_back({{xmin_, ymin_}});
       points_.push_back({{xmax_, ymin_}});
       points_.push_back({{xmax_, ymax_}});
       points_.push_back({{xmin_, ymax_}});
-      points_.push_back({{(xmin_+xmax_)/2.0, (ymin_+ymax)/2.0}});
 
-      // explicitly connect triangles in this small list
-      triangles_.emplace_back(points_, 0, 1, 4, 1, 3, -1);
-      triangles_.emplace_back(points_, 1, 2, 4, 2, 0, -1);
-      triangles_.emplace_back(points_, 2, 3, 4, 3, 1, -1);
-      triangles_.emplace_back(points_, 3, 0, 4, 0, 2, -1);
+      // explicitly connect into two triangles
+      triangles_.emplace_back(points_, 0, 1, 2, -1, 1, -1);
+      triangles_.emplace_back(points_, 2, 3, 0, -1, 0, -1);
 
       // for each point, add its triangles to the connection list
-      trianglesWithPoint_.push_back({{0,3}});
       trianglesWithPoint_.push_back({{0,1}});
-      trianglesWithPoint_.push_back({{1,2}});
-      trianglesWithPoint_.push_back({{2,3}});
-      trianglesWithPoint_.push_back({{0,1,2,3}});
+      trianglesWithPoint_.push_back({0});
+      trianglesWithPoint_.push_back({{0,1}});
+      trianglesWithPoint_.push_back({1});
     }
 
 
@@ -99,18 +95,9 @@ class DelaunayTri {
 
     std::tuple<int,int> findEnclosingTriangleIndex(const Point& p) const
     {
-      int tri = -1;
-      int edge = -1;
       // find root-level triangle that encloses point
-      for (size_t i=0; i<4; ++i) {
-        bool inside;
-        std::tie(inside, edge) = triangles_[i].isPointInside(p);
-        if (inside) {
-          tri = i;
-          break;
-        }
-      }
-      assert(tri >= 0 and "point was not enclosed by root-level triangles");
+      int tri = (p[0] >= p[1]) ? 0 : 1; // triangle 0 below y=x, tri 1 above
+      int edge = -1;
 
       // iterate through children to find leaf triangle enclosing point
       while (not triangles_[tri].isLeaf()) {
