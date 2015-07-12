@@ -149,7 +149,6 @@ class DelaunayTri {
 
     void splitTriangle(const int index, const int edge, const int newVertex)
     {
-      // shortcuts for sanity
       assert(index >= 0 and "can't index an invalid triangle");
 
       // most likely scenario: newVertex is contained in triangle "index"
@@ -181,7 +180,7 @@ class DelaunayTri {
         delaunayFlip(child2, newVertex);
 
       }
-      // special case for external edges
+      // special case for external edges, make two triangles in one triangle
       else if (edge >= 0 and triangles_[index].neighbor(edge) == -1) {
         // going around the triangle in the positive (CCW) direction, starting
         // with the edge 'edge' (which contains newVertex), permutation holds
@@ -189,28 +188,64 @@ class DelaunayTri {
         const std::array<int,3> permutation = {{(edge+2)%3, edge, (edge+1)%3}};
 
         // from the permutation, get the global indices of points and nghbrs
-        const std::array<int,3> v = {{triangles_[index].vertex(permutation[0]),
-                                      triangles_[index].vertex(permutation[1]),
-                                      triangles_[index].vertex(permutation[2])}};
-        const std::array<int,3> n = {{triangles_[index].neighbor(permutation[0]),
-                                      -1, // by construction, this is the ext. edge
-                                      triangles_[index].neighbor(permutation[2])}};
+        const int v0 = triangles_[index].vertex(permutation[0]);
+        const int v1 = triangles_[index].vertex(permutation[1]);
+        const int v2 = triangles_[index].vertex(permutation[2]);
+        const int n0 = triangles_[index].neighbor(permutation[0]);
+        const int n1 = -1; // by construction; this is the extern. edge
+        const int n2 = triangles_[index].neighbor(permutation[2]);
         const int child0 = triangles_.size();
         const int child1 = child0 + 1;
 
-        constructTriangle(child0, v[0], v[1], newVertex, child1, n[1], n[2]);
-        constructTriangle(child1, v[1], v[2], newVertex, n[1], child0, n[0]);
+        constructTriangle(child0, v0, v1, newVertex, child1, n1, n2);
+        constructTriangle(child1, v1, v2, newVertex, n1, child0, n0);
 
         triangles_[index].setChildren(child0, child1);
-        if (n[0] >= 0) triangles_[n[0]].updateNeighbor(index, child1);
-        if (n[2] >= 0) triangles_[n[2]].updateNeighbor(index, child0);
+        if (n0 >= 0) triangles_[n0].updateNeighbor(index, child1);
+        if (n2 >= 0) triangles_[n2].updateNeighbor(index, child0);
 
         delaunayFlip(child0, newVertex);
         delaunayFlip(child1, newVertex);
       }
-      // TODO: special case for internal edge
+      // special case for internal edges, make four triangles in two triangles
       else {
-        assert(false and "can't yet do internal edges");
+        // index of "other" triangle to split
+        const int neighb = triangles_[index].neighbor(edge);
+
+        // permutation of "this" triangle
+        const std::array<int,3> permutation = {{(edge+2)%3, edge, (edge+1)%3}};
+
+        // from the permutation, get the global indices of points and nghbrs
+        const int v0 = triangles_[index].vertex(permutation[0]);
+        const int v1 = triangles_[index].vertex(permutation[1]);
+        const int v2 = triangles_[index].vertex(permutation[2]);
+        const int v3 = triangles_[neighb].pointOppositeFromNeighbor(index);
+        const int np0 = triangles_[index].neighbor(permutation[0]);
+        const int np2 = triangles_[index].neighbor(permutation[2]);
+        const int nn0 = triangles_[neighb].neighbor(permutation[0]);
+        const int nn2 = triangles_[neighb].neighbor(permutation[2]);
+        const int child0 = triangles_.size();
+        const int child1 = child0 + 1;
+        const int child2 = child0 + 2;
+        const int child3 = child0 + 3;
+
+        constructTriangle(child0, v0, v1, newVertex, child1, child3, np2);
+        constructTriangle(child1, v1, v2, newVertex, child2, child0, np0);
+        constructTriangle(child2, v2, v3, newVertex, child3, child1, nn0);
+        constructTriangle(child3, v3, v0, newVertex, child0, child2, nn2);
+
+        triangles_[index].setChildren(child0, child1);
+        if (np0 >= 0) triangles_[np0].updateNeighbor(index, child1);
+        if (np2 >= 0) triangles_[np2].updateNeighbor(index, child0);
+
+        triangles_[neighb].setChildren(child2, child3);
+        if (nn0 >= 0) triangles_[nn0].updateNeighbor(index, child2);
+        if (nn2 >= 0) triangles_[nn2].updateNeighbor(index, child3);
+
+        delaunayFlip(child0, newVertex);
+        delaunayFlip(child1, newVertex);
+        delaunayFlip(child2, newVertex);
+        delaunayFlip(child3, newVertex);
       }
 
       return;
