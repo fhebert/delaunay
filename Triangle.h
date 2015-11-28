@@ -56,9 +56,7 @@ class Triangle {
     }
 
     void setChildren(const int ca, const int cb, const int cc=-1) {
-      children_[0] = ca;
-      children_[1] = cb;
-      children_[2] = cc;
+      children_ = {{ca,cb,cc}};
     }
 
     const std::array<int,3>& vertices() const { return vertices_; }
