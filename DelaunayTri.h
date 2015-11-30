@@ -24,6 +24,9 @@ class DelaunayTri {
     DelaunayTri(const double xmin, const double xmax, const double ymin, const double ymax)
     : xmin_(xmin), xmax_(xmax), ymin_(ymin), ymax_(ymax)
     {
+      assert(xmin < xmax);
+      assert(ymin < ymax);
+
       // initialize the corner points
       points_.push_back({{xmin_, ymin_}});
       points_.push_back({{xmax_, ymin_}});
@@ -96,8 +99,16 @@ class DelaunayTri {
     std::tuple<int,int> findEnclosingTriangleIndex(const Point& p) const
     {
       // find root-level triangle that encloses point
-      int tri = (p[0] >= p[1]) ? 0 : 1; // triangle 0 below y=x, tri 1 above
+      // check y-coord of p vs. y-coord of diagonal across domain
+      const double ycheck = ymin_ + (p[0] - xmin_)*(ymax_ - ymin_)/(xmax_ - xmin_);
+      int tri = (p[1] <= ycheck) ? 0 : 1; // triangle 0 below y=ycheck, tri 1 above
       int edge = -1;
+      {
+        // slightly clumsy, but we need to find the edge associated with p, if any
+        bool inside;
+        std::tie(inside, edge) = triangles_[tri].isPointInside(p);
+      }
+
 
       // iterate through children to find leaf triangle enclosing point
       while (not triangles_[tri].isLeaf()) {
@@ -209,8 +220,8 @@ class DelaunayTri {
         const int v3 = triangles_[neighb].pointOppositeFromNeighbor(index);
         const int np0 = triangles_[index].neighbor(permutation[0]);
         const int np2 = triangles_[index].neighbor(permutation[2]);
-        const int nn0 = triangles_[neighb].neighbor(permutation[0]);
-        const int nn2 = triangles_[neighb].neighbor(permutation[2]);
+        const int nn0 = triangles_[neighb].neighborAcrossGlobalPoint(v0);
+        const int nn2 = triangles_[neighb].neighborAcrossGlobalPoint(v2);
         const int child0 = triangles_.size();
         const int child1 = child0 + 1;
         const int child2 = child0 + 2;
@@ -226,8 +237,8 @@ class DelaunayTri {
         if (np2 >= 0) triangles_[np2].updateNeighbor(index, child0);
 
         triangles_[neighb].setChildren(child2, child3);
-        if (nn0 >= 0) triangles_[nn0].updateNeighbor(index, child2);
-        if (nn2 >= 0) triangles_[nn2].updateNeighbor(index, child3);
+        if (nn0 >= 0) triangles_[nn0].updateNeighbor(neighb, child2);
+        if (nn2 >= 0) triangles_[nn2].updateNeighbor(neighb, child3);
 
         delaunayFlip(child0, newVertex);
         delaunayFlip(child1, newVertex);
